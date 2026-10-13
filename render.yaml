@@ -10,3 +10,7 @@ services:
         value: 3.11.0
       - key: WEB_CONCURRENCY
         value: 2
+      - key: RENDER
+        value: "True"
+      - key: SECRET_KEY
+        generateValue: true
