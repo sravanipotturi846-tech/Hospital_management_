@@ -1,0 +1,220 @@
+{% extends 'hospital_app/base.html' %}
+{% load static %}
+
+{% block title %}Book Doctor Appointment Slot - AuraCare Hospital{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb & Header -->
+    <div class="mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'doctor_list' %}">Doctors</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Book Slot</li>
+            </ol>
+        </nav>
+        <h1 class="h2 fw-bold text-dark mb-1">Schedule an Appointment</h1>
+        <p class="text-muted mb-0">Select your doctor, pick an available time slot in real-time, and confirm your consultation details.</p>
+    </div>
+
+    <!-- Booking Form Container -->
+    <form method="post" id="appointmentBookingForm" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger shadow-sm border-0 mb-4" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                {% for error in form.non_field_errors %}
+                    {{ error }}<br>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <div class="row g-4">
+            <!-- Left Column: Doctor Selection, Date & Interactive Slot Picker -->
+            <div class="col-lg-8">
+                <!-- Step 1: Doctor & Schedule -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+                    <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                        <span class="badge bg-primary rounded-circle p-2 px-3 fw-bold">1</span>
+                        <h5 class="fw-bold text-dark mb-0">Select Doctor & Preferred Date</h5>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="id_doctor" class="form-label fw-semibold text-secondary small">Consulting Doctor <span class="text-danger">*</span></label>
+                            <select name="doctor" class="form-select {% if form.doctor.errors %}is-invalid{% endif %}" id="id_doctor" required>
+                                <option value="">-- Choose Specialist Doctor --</option>
+                                {% for doc in doctors %}
+                                    <option value="{{ doc.id }}" 
+                                            {% if form.doctor.value|stringformat:"s" == doc.id|stringformat:"s" or selected_doctor.id == doc.id %}selected{% endif %}
+                                            data-dept="{{ doc.department }}"
+                                            data-fee="{{ doc.consultation_fee }}"
+                                            data-days="{{ doc.available_days }}">
+                                        {{ doc.name }} ({{ doc.department }} - ${{ doc.consultation_fee }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            {% if form.doctor.errors %}
+                                <div class="invalid-feedback d-block">{{ form.doctor.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="id_date" class="form-label fw-semibold text-secondary small">Appointment Date <span class="text-danger">*</span></label>
+                            <input type="date" name="date" class="form-control {% if form.date.errors %}is-invalid{% endif %}" id="id_date" value="{{ form.date.value|default:today }}" required>
+                            {% if form.date.errors %}
+                                <div class="invalid-feedback d-block">{{ form.date.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Notice banner for day schedule / availability -->
+                    <div id="slotNotice" class="alert alert-info py-2 px-3 small d-none" role="alert">
+                        Loading schedule availability...
+                    </div>
+
+                    <!-- Interactive Slot Selection -->
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-semibold text-secondary small mb-0">
+                                <i class="bi bi-clock me-1 text-primary"></i> Available Consultation Slots <span class="text-danger">*</span>
+                            </label>
+                            <div class="d-flex gap-2 small">
+                                <span><span class="badge bg-success-subtle text-success border border-success-subtle">&bull; Available</span></span>
+                                <span><span class="badge bg-danger text-white">&bull; Booked</span></span>
+                                <span><span class="badge bg-primary text-white">&bull; Selected</span></span>
+                            </div>
+                        </div>
+
+                        <!-- Underlying Django Select (synchronized with interactive buttons) -->
+                        {{ form.time_slot }}
+                        {% if form.time_slot.errors %}
+                            <div class="invalid-feedback d-block mb-2">{{ form.time_slot.errors.0 }}</div>
+                        {% endif %}
+
+                        <!-- Interactive Grid Rendered by slot_picker.js -->
+                        <div id="interactiveSlotsContainer" class="slots-grid">
+                            <div class="text-center py-4 text-muted w-100">
+                                <i class="bi bi-calendar-range fs-3 text-secondary d-block mb-1"></i>
+                                Select a doctor and date above to load available time slots.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Patient Information -->
+                <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+                    <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                        <span class="badge bg-primary rounded-circle p-2 px-3 fw-bold">2</span>
+                        <h5 class="fw-bold text-dark mb-0">Patient Demographics & Contact</h5>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label fw-semibold text-secondary small">First Name <span class="text-danger">*</span></label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}<div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label fw-semibold text-secondary small">Last Name <span class="text-danger">*</span></label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}<div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold text-secondary small">Email Address (for appointment confirmation) <span class="text-danger">*</span></label>
+                            {{ form.email }}
+                            {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.phone.id_for_label }}" class="form-label fw-semibold text-secondary small">Phone Number <span class="text-danger">*</span></label>
+                            {{ form.phone }}
+                            {% if form.phone.errors %}<div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.gender.id_for_label }}" class="form-label fw-semibold text-secondary small">Gender <span class="text-danger">*</span></label>
+                            {{ form.gender }}
+                            {% if form.gender.errors %}<div class="text-danger small mt-1">{{ form.gender.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="{{ form.blood_group.id_for_label }}" class="form-label fw-semibold text-secondary small">Blood Group (Optional)</label>
+                            {{ form.blood_group }}
+                            {% if form.blood_group.errors %}<div class="text-danger small mt-1">{{ form.blood_group.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <label for="{{ form.address.id_for_label }}" class="form-label fw-semibold text-secondary small">Residential Address</label>
+                            {{ form.address }}
+                            {% if form.address.errors %}<div class="text-danger small mt-1">{{ form.address.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="col-12">
+                            <label for="{{ form.reason.id_for_label }}" class="form-label fw-semibold text-secondary small">Symptoms / Reason for Visit <span class="text-danger">*</span></label>
+                            {{ form.reason }}
+                            {% if form.reason.errors %}<div class="text-danger small mt-1">{{ form.reason.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Booking Summary & Confirmation -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 sticky-top bg-white" style="top: 90px;">
+                    <h5 class="fw-bold text-dark pb-2 border-bottom mb-3">
+                        <i class="bi bi-receipt me-2 text-primary"></i> Booking Overview
+                    </h5>
+
+                    <div class="d-flex flex-column gap-3 mb-4">
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted small">Specialist:</span>
+                            <span class="fw-bold text-dark text-end" id="summaryDoctorName">Not selected</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted small">Appointment Date:</span>
+                            <span class="fw-bold text-dark" id="summarySelectedDate">Not selected</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted small">Time Slot:</span>
+                            <span class="fw-bold text-primary" id="summarySelectedSlot">Select slot</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted small">Consultation Type:</span>
+                            <span class="badge bg-light text-dark border">In-Clinic Visit</span>
+                        </div>
+                        <hr class="my-1">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-dark">Estimated Fee:</span>
+                            <span class="h4 fw-bold text-primary mb-0" id="summaryDoctorFee">$0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-light border small text-muted mb-4 py-2">
+                        <i class="bi bi-shield-check text-success me-1"></i>
+                        Double-booking prevention is active. Your slot is reserved immediately upon submission.
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 rounded-pill fw-bold shadow-sm" id="confirmBookingBtn">
+                        <i class="bi bi-check2-circle me-1"></i> Confirm Appointment
+                    </button>
+
+                    <div class="text-center mt-3">
+                        <a href="{% url 'doctor_list' %}" class="small text-muted text-decoration-none">
+                            <i class="bi bi-arrow-left me-1"></i> Back to Doctors List
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/slot_picker.js' %}"></script>
+{% endblock %}

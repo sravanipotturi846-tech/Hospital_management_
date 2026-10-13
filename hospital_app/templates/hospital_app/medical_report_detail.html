@@ -1,0 +1,150 @@
+{% extends 'hospital_app/base.html' %}
+{% load static %}
+
+{% block title %}Medical Report #{{ report.id }} - {{ report.patient.full_name }} - AuraCare Hospital{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="mb-4 no-print">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'patient_dashboard' %}">Patient Portal</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Medical Report #{{ report.id }}</li>
+            </ol>
+        </nav>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <!-- Medical Report Document -->
+            <div class="medical-report-card">
+                <!-- Header / Letterhead -->
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center pb-4 mb-4 border-bottom">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="brand-icon">
+                            <i class="bi bi-hospital"></i>
+                        </div>
+                        <div>
+                            <h3 class="fw-bold text-dark mb-0">AuraCare Health System</h3>
+                            <p class="small text-muted mb-0">Department of {{ report.doctor.department }} &bull; Clinical Outpatient Record</p>
+                        </div>
+                    </div>
+                    <div class="text-md-end mt-3 mt-md-0">
+                        <span class="badge bg-success px-3 py-2 fs-6 rounded-pill">
+                            <i class="bi bi-check-circle me-1"></i> Official Consultation Record
+                        </span>
+                        <div class="small text-muted mt-1">Date: <strong>{{ report.report_date|date:"F j, Y" }}</strong></div>
+                        <div class="small text-muted">Report ID: <strong>#REP-{{ report.id|stringformat:"05d" }}</strong></div>
+                    </div>
+                </div>
+
+                <!-- Patient & Attending Physician Grid -->
+                <div class="row g-4 mb-4 pb-4 border-bottom">
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-uppercase text-muted small mb-2">Patient Profile</h6>
+                        <h5 class="fw-bold text-dark mb-1">{{ report.patient.full_name }}</h5>
+                        <div class="small text-muted mb-1"><i class="bi bi-envelope me-1"></i> {{ report.patient.email }}</div>
+                        <div class="small text-muted mb-1"><i class="bi bi-telephone me-1"></i> {{ report.patient.phone }}</div>
+                        <div class="small text-muted">
+                            Gender: <strong>{{ report.patient.gender }}</strong> &bull; Blood Group: <strong>{{ report.patient.blood_group|default:'N/A' }}</strong>
+                        </div>
+                        {% if report.patient.address %}
+                            <div class="small text-muted mt-1">Address: {{ report.patient.address }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <h6 class="fw-bold text-uppercase text-muted small mb-2">Attending Physician</h6>
+                        <h5 class="fw-bold text-dark mb-1">{{ report.doctor.name }}</h5>
+                        <div class="badge bg-primary-subtle text-primary mb-2">{{ report.doctor.department }}</div>
+                        <div class="small text-muted">{{ report.doctor.specialization }}</div>
+                        <div class="small text-muted">{{ report.doctor.qualification }} &bull; {{ report.doctor.experience_years }} Years Clinical Experience</div>
+                    </div>
+                </div>
+
+                <!-- Diagnosis & Symptoms -->
+                <div class="mb-4">
+                    <h6 class="fw-bold text-dark mb-2">
+                        <i class="bi bi-clipboard2-pulse text-primary me-2"></i>Primary Clinical Diagnosis
+                    </h6>
+                    <div class="p-3 bg-light rounded-3 text-dark fw-semibold">
+                        {{ report.diagnosis }}
+                    </div>
+                </div>
+
+                {% if report.symptoms %}
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark mb-2">
+                            <i class="bi bi-activity text-warning me-2"></i>Recorded Symptoms & Observations
+                        </h6>
+                        <div class="p-3 bg-light rounded-3 text-secondary small">
+                            {{ report.symptoms }}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Prescription Box -->
+                <div class="mb-4">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-prescription fs-4 text-danger"></i>
+                        <h6 class="fw-bold text-dark mb-0">Prescription & Medical Regimen (Rx)</h6>
+                    </div>
+                    <div class="prescription-box">
+{{ report.prescription }}
+                    </div>
+                </div>
+
+                <!-- Doctor Notes & Instructions -->
+                {% if report.doctor_notes %}
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-dark mb-2">
+                            <i class="bi bi-journal-text text-info me-2"></i>Physician Advice & Lifestyle Recommendations
+                        </h6>
+                        <div class="p-3 bg-light rounded-3 text-secondary small">
+                            {{ report.doctor_notes }}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Follow-up Notice -->
+                {% if report.follow_up_date %}
+                    <div class="alert alert-primary py-2 px-3 small d-flex align-items-center gap-2 mb-4">
+                        <i class="bi bi-calendar-check fs-5"></i>
+                        <span>Recommended next review consultation: <strong>{{ report.follow_up_date|date:"F j, Y" }}</strong></span>
+                    </div>
+                {% endif %}
+
+                <!-- Sign-off Block -->
+                <div class="row pt-4 mt-4 border-top align-items-end">
+                    <div class="col-6 small text-muted">
+                        <div>AuraCare Digital Health EMR System</div>
+                        <div>Generated automatically on {{ report.created_at|date:"Y-m-d H:i" }} UTC</div>
+                    </div>
+                    <div class="col-6 text-end">
+                        <div class="d-inline-block text-center">
+                            <div class="font-monospace small text-primary fw-bold" style="border-bottom: 1.5px solid #0f172a; padding-bottom: 2px; width: 180px;">
+                                {{ report.doctor.name }}
+                            </div>
+                            <span class="small text-muted d-block mt-1">Authorized Medical Officer</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Print & Back Actions -->
+                <div class="d-flex justify-content-between align-items-center pt-4 mt-4 border-top no-print">
+                    <a href="{% url 'patient_dashboard' %}?email={{ report.patient.email }}" class="btn btn-outline-secondary rounded-pill px-3">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+                    </a>
+
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary rounded-pill px-4 btn-print shadow-sm">
+                            <i class="bi bi-printer me-1"></i> Print Consultation Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,210 @@
+{% extends 'hospital_app/base.html' %}
+{% load static %}
+
+{% block title %}Doctors Directory - AuraCare Hospital{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb & Header -->
+    <div class="mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Find Doctors</li>
+            </ol>
+        </nav>
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+            <div>
+                <h1 class="h2 fw-bold text-dark mb-1">Doctors Directory & Specialists</h1>
+                <p class="text-muted mb-0">Browse our experienced medical specialists and filter dynamically by clinical department.</p>
+            </div>
+            <a href="{% url 'book_appointment' %}" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                <i class="bi bi-calendar-plus me-1"></i> Book Immediate Slot
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter & Search Toolbar -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+        <div class="row g-3 align-items-center">
+            <!-- Search bar -->
+            <div class="col-lg-4 col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" id="doctorSearchInput" class="form-control bg-light border-start-0" placeholder="Search doctor by name, specialty...">
+                </div>
+            </div>
+
+            <!-- Department Filter Pills -->
+            <div class="col-lg-8 col-md-12">
+                <div class="d-flex flex-wrap gap-2 align-items-center justify-content-lg-end">
+                    <span class="small fw-bold text-muted me-1 d-none d-lg-inline">Department:</span>
+                    <button type="button" class="dept-pill {% if not selected_dept or selected_dept == 'all' %}active{% endif %}" data-dept="all">
+                        All <span class="badge bg-secondary-subtle text-dark ms-1" id="visibleDoctorCount">{{ doctors.count }}</span>
+                    </button>
+                    {% for dept_code, dept_label in departments %}
+                        <button type="button" class="dept-pill {% if selected_dept == dept_code %}active{% endif %}" data-dept="{{ dept_code }}">
+                            {{ dept_label }}
+                            <span class="badge bg-secondary-subtle text-dark ms-1">
+                                {% if dept_code == 'Cardiology' %}{{ dept_counts.Cardiology|default:0 }}{% endif %}
+                                {% if dept_code == 'Pediatrics' %}{{ dept_counts.Pediatrics|default:0 }}{% endif %}
+                                {% if dept_code == 'Orthopedics' %}{{ dept_counts.Orthopedics|default:0 }}{% endif %}
+                                {% if dept_code == 'Neurology' %}{{ dept_counts.Neurology|default:0 }}{% endif %}
+                            </span>
+                        </button>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Doctors Cards Grid -->
+    <div class="row g-4" id="doctorsGrid">
+        {% for doc in doctors %}
+            <div class="col-lg-4 col-md-6 doctor-item" 
+                 data-department="{{ doc.department }}" 
+                 data-name="{{ doc.name }}" 
+                 data-specialization="{{ doc.specialization }}" 
+                 data-qualification="{{ doc.qualification }}">
+                <div class="doctor-card">
+                    <div class="doctor-avatar-wrap">
+                        {% if doc.profile_image %}
+                            <img src="{{ doc.profile_image }}" alt="{{ doc.name }}" class="doctor-avatar-img" onerror="this.src='https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&auto=format&fit=crop&q=80';">
+                        {% else %}
+                            <div class="doctor-avatar-placeholder">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                        {% endif %}
+                        <span class="department-badge-corner dept-{{ doc.department }}">
+                            {{ doc.department }}
+                        </span>
+                    </div>
+
+                    <div class="p-3 d-flex flex-column flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <h5 class="fw-bold text-dark mb-0">{{ doc.name }}</h5>
+                            <span class="badge bg-light text-primary border border-primary-subtle fw-bold fs-6">
+                                ${{ doc.consultation_fee }}
+                            </span>
+                        </div>
+                        <p class="text-primary small fw-semibold mb-1">{{ doc.specialization }}</p>
+                        <p class="text-muted small mb-2">
+                            <i class="bi bi-award me-1"></i> {{ doc.qualification }} &bull; {{ doc.experience_years }} Years Experience
+                        </p>
+
+                        <div class="bg-light p-2 rounded-3 small text-muted mb-3">
+                            <div class="d-flex align-items-center gap-1 mb-1">
+                                <i class="bi bi-calendar-check text-primary"></i>
+                                <span class="fw-semibold">Available Days:</span>
+                            </div>
+                            <div class="text-dark">{{ doc.available_days }}</div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-auto pt-2 border-top">
+                            <button type="button" class="btn btn-outline-secondary btn-sm flex-grow-1 rounded-pill" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#doctorDetailModal"
+                                    data-id="{{ doc.id }}"
+                                    data-name="{{ doc.name }}"
+                                    data-dept="{{ doc.department }}"
+                                    data-spec="{{ doc.specialization }}"
+                                    data-fee="{{ doc.consultation_fee }}"
+                                    data-days="{{ doc.available_days }}"
+                                    data-exp="{{ doc.experience_years }}"
+                                    data-qual="{{ doc.qualification }}"
+                                    data-bio="{{ doc.bio }}"
+                                    data-email="{{ doc.email }}"
+                                    data-phone="{{ doc.phone }}"
+                                    data-img="{{ doc.profile_image }}">
+                                <i class="bi bi-info-circle me-1"></i> Quick View
+                            </button>
+                            <a href="{% url 'book_appointment' %}?doctor={{ doc.id }}" class="btn btn-primary btn-sm flex-grow-1 rounded-pill">
+                                <i class="bi bi-calendar-plus me-1"></i> Book Slot
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="bi bi-person-x fs-1 text-muted d-block mb-2"></i>
+                <h5 class="text-muted">No doctors found matching your criteria.</h5>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- No Results Placeholder for JS Filtering -->
+    <div id="noDoctorsFound" class="card border-0 shadow-sm rounded-4 p-5 text-center my-4 d-none bg-white">
+        <i class="bi bi-search fs-1 text-muted mb-3 d-block"></i>
+        <h4 class="fw-bold text-dark">No Doctors Found</h4>
+        <p class="text-muted mb-3">There are no doctors matching your current department or search filter.</p>
+        <button class="btn btn-outline-primary btn-sm rounded-pill px-4 mx-auto" onclick="document.querySelector('.dept-pill[data-dept=all]').click(); document.getElementById('doctorSearchInput').value='';">
+            Reset Filters
+        </button>
+    </div>
+</div>
+
+<!-- Doctor Detail Modal (Bootstrap 5 Modal) -->
+<div class="modal fade" id="doctorDetailModal" tabindex="-1" aria-labelledby="doctorDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content rounded-4 border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 pt-0">
+                <div class="row g-4 align-items-center">
+                    <div class="col-md-4 text-center">
+                        <img id="modalDocImg" src="" alt="Doctor" class="img-fluid rounded-4 shadow-sm mb-3" style="max-height: 240px; object-fit: cover; width: 100%;">
+                        <span id="modalDocDept" class="badge bg-primary px-3 py-2 rounded-pill fw-semibold">Department</span>
+                    </div>
+                    <div class="col-md-8">
+                        <h3 id="modalDocName" class="fw-bold text-dark mb-1">Doctor Name</h3>
+                        <p id="modalDocSpec" class="text-primary fw-semibold mb-2">Specialization</p>
+                        <p id="modalDocExp" class="badge bg-light text-dark border mb-3">5 Years Experience</p>
+
+                        <div class="mb-3">
+                            <h6 class="fw-bold text-muted small text-uppercase">Academic Credentials</h6>
+                            <p id="modalDocQual" class="small text-dark mb-0">MBBS, MD</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <h6 class="fw-bold text-muted small text-uppercase">About Doctor</h6>
+                            <p id="modalDocBio" class="small text-muted mb-0">Doctor biography...</p>
+                        </div>
+
+                        <div class="row g-2 p-3 bg-light rounded-3 mb-3 small">
+                            <div class="col-6">
+                                <span class="text-muted d-block">Consultation Fee:</span>
+                                <strong id="modalDocFee" class="text-dark fs-6">$50.00</strong>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted d-block">Duty Days:</span>
+                                <strong id="modalDocDays" class="text-dark">Mon - Fri</strong>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted d-block">Email:</span>
+                                <span id="modalDocEmail" class="text-dark">email</span>
+                            </div>
+                            <div class="col-6">
+                                <span class="text-muted d-block">Phone:</span>
+                                <span id="modalDocPhone" class="text-dark">phone</span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-light rounded-pill px-3" data-bs-dismiss="modal">Close</button>
+                            <a id="modalBookBtn" href="#" class="btn btn-primary rounded-pill px-4 fw-semibold">
+                                <i class="bi bi-calendar-check me-1"></i> Proceed to Book Slot
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/doctor_filter.js' %}"></script>
+{% endblock %}

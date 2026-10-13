@@ -1,0 +1,311 @@
+{% extends 'hospital_app/base.html' %}
+{% load static %}
+
+{% block title %}Staff & Admin Dashboard - AuraCare Hospital{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+    <!-- Header & Quick Navigation -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary-subtle text-primary fw-semibold px-2 py-1">Staff Administration Portal</span>
+                <span class="badge bg-success-subtle text-success fw-semibold px-2 py-1"><i class="bi bi-circle-fill small me-1"></i> Live Schedule</span>
+            </div>
+            <h1 class="h2 fw-bold text-dark mb-0">Appointments & Clinical Workflow</h1>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'manage_doctors' %}" class="btn btn-outline-primary rounded-pill btn-sm px-3 fw-semibold">
+                <i class="bi bi-people-fill me-1"></i> Manage Doctors
+            </a>
+            <a href="/admin/" class="btn btn-outline-secondary rounded-pill btn-sm px-3 fw-semibold">
+                <i class="bi bi-gear-fill me-1"></i> Django Admin
+            </a>
+            <a href="{% url 'book_appointment' %}" class="btn btn-primary rounded-pill btn-sm px-3 fw-semibold">
+                <i class="bi bi-plus-circle me-1"></i> New Walk-in Booking
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Overview Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="stat-widget">
+                <div>
+                    <div class="text-muted small fw-semibold">Total</div>
+                    <div class="h3 fw-bold text-dark mb-0">{{ stats.total }}</div>
+                </div>
+                <div class="stat-icon bg-primary-subtle text-primary">
+                    <i class="bi bi-calendar2-range"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-xl-2">
+            <div class="stat-widget">
+                <div>
+                    <div class="text-muted small fw-semibold">Today's</div>
+                    <div class="h3 fw-bold text-info mb-0">{{ stats.today }}</div>
+                </div>
+                <div class="stat-icon bg-info-subtle text-info">
+                    <i class="bi bi-calendar2-day"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-4 col-xl-2">
+            <a href="?status=Pending" class="text-decoration-none">
+                <div class="stat-widget">
+                    <div>
+                        <div class="text-warning-emphasis small fw-semibold">Pending</div>
+                        <div class="h3 fw-bold text-warning mb-0">{{ stats.pending }}</div>
+                    </div>
+                    <div class="stat-icon bg-warning-subtle text-warning">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-xl-2">
+            <a href="?status=Confirmed" class="text-decoration-none">
+                <div class="stat-widget">
+                    <div>
+                        <div class="text-primary-emphasis small fw-semibold">Confirmed</div>
+                        <div class="h3 fw-bold text-primary mb-0">{{ stats.confirmed }}</div>
+                    </div>
+                    <div class="stat-icon bg-primary-subtle text-primary">
+                        <i class="bi bi-patch-check"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-xl-2">
+            <a href="?status=Completed" class="text-decoration-none">
+                <div class="stat-widget">
+                    <div>
+                        <div class="text-success-emphasis small fw-semibold">Completed</div>
+                        <div class="h3 fw-bold text-success mb-0">{{ stats.completed }}</div>
+                    </div>
+                    <div class="stat-icon bg-success-subtle text-success">
+                        <i class="bi bi-check2-all"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-6 col-md-4 col-xl-2">
+            <a href="?status=Cancelled" class="text-decoration-none">
+                <div class="stat-widget">
+                    <div>
+                        <div class="text-danger-emphasis small fw-semibold">Cancelled</div>
+                        <div class="h3 fw-bold text-danger mb-0">{{ stats.cancelled }}</div>
+                    </div>
+                    <div class="stat-icon bg-danger-subtle text-danger">
+                        <i class="bi bi-x-circle"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters & Query Toolbar -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-3">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control bg-light border-start-0" placeholder="Search patient, doctor, ID..." value="{{ search_query }}">
+                </div>
+            </div>
+
+            <div class="col-md-2">
+                <select name="status" class="form-select form-select-sm">
+                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Statuses</option>
+                    {% for st in statuses %}
+                        <option value="{{ st }}" {% if status_filter == st %}selected{% endif %}>{{ st }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <select name="department" class="form-select form-select-sm">
+                    <option value="all" {% if dept_filter == 'all' %}selected{% endif %}>All Departments</option>
+                    {% for dept_code, dept_name in departments %}
+                        <option value="{{ dept_code }}" {% if dept_filter == dept_code %}selected{% endif %}>{{ dept_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <select name="doctor" class="form-select form-select-sm">
+                    <option value="all" {% if doctor_filter == 'all' %}selected{% endif %}>All Doctors</option>
+                    {% for doc in doctors %}
+                        <option value="{{ doc.id }}" {% if doctor_filter|stringformat:"s" == doc.id|stringformat:"s" %}selected{% endif %}>{{ doc.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <input type="date" name="date" class="form-control form-control-sm" value="{{ date_filter }}" title="Filter by date">
+            </div>
+
+            <div class="col-md-1 d-flex gap-1">
+                <button type="submit" class="btn btn-primary btn-sm rounded-pill w-100">Filter</button>
+                <a href="{% url 'staff_dashboard' %}" class="btn btn-light btn-sm rounded-pill" title="Reset Filters"><i class="bi bi-arrow-counterclockwise"></i></a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Appointments Master Table -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+        <div class="card-header bg-white py-3 px-4 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-dark">Schedule & Appointments ({{ appointments.count }})</h5>
+            <span class="small text-muted">Real-time status changes reflect immediately</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table-modern table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Patient Info</th>
+                        <th>Consulting Doctor</th>
+                        <th>Date & Slot</th>
+                        <th>Reason / Notes</th>
+                        <th>Status</th>
+                        <th>Medical Report</th>
+                        <th class="text-end">Staff Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for apt in appointments %}
+                        <tr>
+                            <td>
+                                <strong class="text-primary">#{{ apt.id }}</strong>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark">{{ apt.patient.full_name }}</div>
+                                <div class="small text-muted">{{ apt.patient.email }}</div>
+                                <div class="small text-muted"><i class="bi bi-telephone me-1"></i>{{ apt.patient.phone }}</div>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark">{{ apt.doctor.name }}</div>
+                                <span class="badge bg-light text-primary border dept-{{ apt.doctor.department }}">{{ apt.doctor.department }}</span>
+                                <div class="small text-muted mt-1">${{ apt.doctor.consultation_fee }}</div>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-dark"><i class="bi bi-calendar3 me-1 text-primary"></i>{{ apt.date|date:"M d, Y" }}</div>
+                                <span class="badge bg-light text-dark border small"><i class="bi bi-clock me-1"></i>{{ apt.time_slot }}</span>
+                            </td>
+                            <td style="max-width: 200px;">
+                                <div class="small text-secondary text-truncate" title="{{ apt.reason }}">
+                                    {{ apt.reason }}
+                                </div>
+                                {% if apt.status == 'Cancelled' and apt.cancellation_reason %}
+                                    <div class="small text-danger mt-1">
+                                        <strong>Cancel Reason:</strong> {{ apt.cancellation_reason|truncatechars:40 }}
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="badge-status badge-{{ apt.status }}">
+                                    <span class="status-dot"></span>
+                                    {{ apt.status }}
+                                </div>
+                            </td>
+                            <td>
+                                {% if apt.report %}
+                                    <a href="{% url 'view_report' apt.report.id %}" class="btn btn-outline-success btn-sm rounded-pill px-2 py-0 small">
+                                        <i class="bi bi-file-earmark-check me-1"></i> View Report
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted small">None</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <!-- Quick Confirm -->
+                                    {% if apt.status == 'Pending' %}
+                                        <form method="post" action="{% url 'update_appointment_status' apt.id %}" class="d-inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="status" value="Confirmed">
+                                            <button type="submit" class="btn btn-outline-primary btn-sm" title="Confirm Appointment">
+                                                <i class="bi bi-check-lg"></i> Confirm
+                                            </button>
+                                        </form>
+                                    {% endif %}
+
+                                    <!-- Consult & Write Report -->
+                                    <a href="{% url 'create_or_edit_report' apt.id %}" class="btn btn-outline-info btn-sm" title="Add / Edit Consultation Report">
+                                        <i class="bi bi-pencil-square"></i> Report
+                                    </a>
+
+                                    <!-- Quick Status Modal Trigger -->
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#statusModal{{ apt.id }}" title="Change Status">
+                                        <i class="bi bi-sliders"></i>
+                                    </button>
+
+                                    <!-- View Slip -->
+                                    <a href="{% url 'appointment_detail' apt.id %}" class="btn btn-light btn-sm text-secondary" title="View Confirmation Slip">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </div>
+
+                                <!-- Status Modal -->
+                                <div class="modal fade text-start" id="statusModal{{ apt.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content rounded-4 border-0 shadow">
+                                            <form method="post" action="{% url 'update_appointment_status' apt.id %}">
+                                                {% csrf_token %}
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title fw-bold">Update Appointment #{{ apt.id }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-semibold">Patient:</label>
+                                                        <input type="text" class="form-control" value="{{ apt.patient.full_name }}" disabled>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label small fw-semibold">Consulting Doctor:</label>
+                                                        <input type="text" class="form-control" value="{{ apt.doctor.name }} ({{ apt.date }} {{ apt.time_slot }})" disabled>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="statusSelect{{ apt.id }}" class="form-label small fw-semibold">Appointment Status</label>
+                                                        <select name="status" id="statusSelect{{ apt.id }}" class="form-select">
+                                                            {% for st in statuses %}
+                                                                <option value="{{ st }}" {% if apt.status == st %}selected{% endif %}>{{ st }}</option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="cancelReason{{ apt.id }}" class="form-label small fw-semibold">Cancellation Reason (if cancelling)</label>
+                                                        <textarea name="cancellation_reason" id="cancelReason{{ apt.id }}" class="form-control" rows="2" placeholder="Specify reason...">{{ apt.cancellation_reason|default:'' }}</textarea>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-light rounded-pill" data-bs-dismiss="modal">Close</button>
+                                                    <button type="submit" class="btn btn-primary rounded-pill px-4">Update Status</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                No appointments found matching the current filters.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

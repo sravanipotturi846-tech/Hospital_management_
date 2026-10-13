@@ -1,0 +1,268 @@
+{% extends 'hospital_app/base.html' %}
+{% load static %}
+
+{% block title %}AuraCare Hospital - Doctors, Appointments & Digital Reports{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section mb-5">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7">
+                <div class="hero-badge mb-3">
+                    <i class="bi bi-patch-check-fill text-warning"></i>
+                    Certified Multi-Specialty Hospital & Research Center
+                </div>
+                <h1 class="display-4 fw-extrabold text-white mb-3" style="letter-spacing: -1px; font-weight: 800;">
+                    Expert Healthcare <br>
+                    <span style="background: linear-gradient(90deg, #38bdf8, #2dd4bf); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        Real-Time Slot Booking
+                    </span>
+                </h1>
+                <p class="lead text-light opacity-90 mb-4" style="max-width: 600px;">
+                    Connect with world-class specialists across Cardiology, Pediatrics, Orthopedics, and Neurology. Check live slot availability, book instantly without queueing, and track consultation reports online.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{% url 'book_appointment' %}" class="btn btn-light btn-lg px-4 py-2 fw-bold shadow text-primary rounded-pill">
+                        <i class="bi bi-calendar-check-fill me-2 text-primary"></i> Book Appointment Now
+                    </a>
+                    <a href="{% url 'doctor_list' %}" class="btn btn-outline-light btn-lg px-4 py-2 fw-bold rounded-pill">
+                        <i class="bi bi-people me-2"></i> Browse Specialists
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="hero-stats-card text-center">
+                            <i class="bi bi-person-hearts fs-2 text-info mb-2 d-block"></i>
+                            <h2 class="fw-bold mb-0 text-white">{{ total_doctors }}+</h2>
+                            <span class="small text-white-50">Verified Specialists</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="hero-stats-card text-center">
+                            <i class="bi bi-hospital fs-2 text-warning mb-2 d-block"></i>
+                            <h2 class="fw-bold mb-0 text-white">4</h2>
+                            <span class="small text-white-50">Core Departments</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="hero-stats-card text-center">
+                            <i class="bi bi-calendar2-check fs-2 text-success mb-2 d-block"></i>
+                            <h2 class="fw-bold mb-0 text-white">{{ total_appointments }}</h2>
+                            <span class="small text-white-50">Scheduled Appointments</span>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="hero-stats-card text-center">
+                            <i class="bi bi-shield-check fs-2 text-teal mb-2 d-block" style="color: #2dd4bf;"></i>
+                            <h2 class="fw-bold mb-0 text-white">100%</h2>
+                            <span class="small text-white-50">Slot Accuracy</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Departments Section -->
+<section class="container mb-5">
+    <div class="text-center mb-4">
+        <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-semibold mb-2">Our Clinical Departments</span>
+        <h2 class="fw-bold text-dark">Specialized Centers of Excellence</h2>
+        <p class="text-muted">Dedicated departments equipped with advanced diagnostic facilities and senior consultants</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Cardiology -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-4 text-center transition-all hover-shadow" style="background: linear-gradient(180deg, #fff 0%, #fff5f5 100%); border-top: 4px solid #ef4444 !important;">
+                <div class="mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 64px; height: 64px; background: #fee2e2; color: #dc2626; font-size: 1.8rem;">
+                    <i class="bi bi-heart-pulse-fill"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Cardiology</h5>
+                <p class="text-muted small mb-3">Heart diagnostics, intervention, hypertension management, and coronary care.</p>
+                <a href="{% url 'doctor_list' %}?department=Cardiology" class="btn btn-sm btn-outline-danger rounded-pill mt-auto fw-semibold">
+                    View Doctors <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Pediatrics -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-4 text-center transition-all hover-shadow" style="background: linear-gradient(180deg, #fff 0%, #fffbeb 100%); border-top: 4px solid #f59e0b !important;">
+                <div class="mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 64px; height: 64px; background: #fef3c7; color: #d97706; font-size: 1.8rem;">
+                    <i class="bi bi-emoji-smile-fill"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Pediatrics</h5>
+                <p class="text-muted small mb-3">Comprehensive child health, growth tracking, vaccination, and newborn care.</p>
+                <a href="{% url 'doctor_list' %}?department=Pediatrics" class="btn btn-sm btn-outline-warning text-dark rounded-pill mt-auto fw-semibold">
+                    View Doctors <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Orthopedics -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-4 text-center transition-all hover-shadow" style="background: linear-gradient(180deg, #fff 0%, #eef2ff 100%); border-top: 4px solid #4f46e5 !important;">
+                <div class="mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 64px; height: 64px; background: #e0e7ff; color: #4338ca; font-size: 1.8rem;">
+                    <i class="bi bi-bandaid-fill"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Orthopedics</h5>
+                <p class="text-muted small mb-3">Bone fracture care, joint replacement, spine surgery, and sports medicine.</p>
+                <a href="{% url 'doctor_list' %}?department=Orthopedics" class="btn btn-sm btn-outline-primary rounded-pill mt-auto fw-semibold">
+                    View Doctors <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- Neurology -->
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-4 text-center transition-all hover-shadow" style="background: linear-gradient(180deg, #fff 0%, #f0f9ff 100%); border-top: 4px solid #0284c7 !important;">
+                <div class="mx-auto mb-3 rounded-circle d-flex align-items-center justify-content-center" style="width: 64px; height: 64px; background: #e0f2fe; color: #0284c7; font-size: 1.8rem;">
+                    <i class="bi bi-activity"></i>
+                </div>
+                <h5 class="fw-bold mb-2">Neurology</h5>
+                <p class="text-muted small mb-3">Brain & nervous system disorders, epilepsy, migraine, stroke rehabilitation.</p>
+                <a href="{% url 'doctor_list' %}?department=Neurology" class="btn btn-sm btn-outline-info text-dark rounded-pill mt-auto fw-semibold">
+                    View Doctors <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Doctors Section -->
+<section class="container mb-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-4">
+        <div>
+            <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-semibold mb-2">Renowned Medical Faculty</span>
+            <h2 class="fw-bold text-dark mb-0">Featured Doctors & Specialists</h2>
+        </div>
+        <a href="{% url 'doctor_list' %}" class="btn btn-link text-decoration-none fw-bold mt-2 mt-md-0">
+            View All Doctors <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+
+    <div class="row g-4">
+        {% for doc in featured_doctors %}
+            <div class="col-md-6 col-lg-4">
+                <div class="doctor-card">
+                    <div class="doctor-avatar-wrap">
+                        {% if doc.profile_image %}
+                            <img src="{{ doc.profile_image }}" alt="{{ doc.name }}" class="doctor-avatar-img" onerror="this.src='https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&auto=format&fit=crop&q=80';">
+                        {% else %}
+                            <div class="doctor-avatar-placeholder">
+                                <i class="bi bi-person"></i>
+                            </div>
+                        {% endif %}
+                        <span class="department-badge-corner dept-{{ doc.department }}">
+                            {{ doc.department }}
+                        </span>
+                    </div>
+
+                    <div class="p-3 d-flex flex-column flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <h5 class="fw-bold text-dark mb-0">{{ doc.name }}</h5>
+                            <span class="badge bg-light text-dark border">${{ doc.consultation_fee }}</span>
+                        </div>
+                        <p class="text-primary small fw-semibold mb-2">{{ doc.specialization }}</p>
+                        <p class="text-muted small mb-3" style="min-height: 38px;">
+                            <i class="bi bi-mortarboard me-1"></i> {{ doc.qualification }} &bull; {{ doc.experience_years }} yrs exp
+                        </p>
+
+                        <div class="border-top pt-3 mt-auto d-flex justify-content-between align-items-center">
+                            <span class="small text-muted">
+                                <i class="bi bi-calendar3 me-1 text-primary"></i> {{ doc.available_days|truncatechars:26 }}
+                            </span>
+                            <a href="{% url 'book_appointment' %}?doctor={{ doc.id }}" class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
+                                Book Slot
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="col-12 text-center py-5">
+                <p class="text-muted">No doctors found yet. Please initialize sample data.</p>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- System Features & Workflow Highlights -->
+<section class="bg-white py-5 border-top border-bottom mb-5">
+    <div class="container">
+        <div class="row g-4 align-items-center">
+            <div class="col-lg-6">
+                <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-semibold mb-2">Automated Portal Workflow</span>
+                <h2 class="fw-bold mb-3">Prevent Double Bookings With Interactive Slot Intelligence</h2>
+                <p class="text-muted mb-4">
+                    Our system integrates real-time database validation and client-side scheduling. When a slot is reserved, it immediately prevents double bookings for that doctor and date.
+                </p>
+                <div class="d-flex flex-column gap-3">
+                    <div class="d-flex gap-3">
+                        <div class="stat-icon bg-primary-subtle text-primary flex-shrink-0">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Live Time Slot Availability</h6>
+                            <p class="small text-muted mb-0">Select your preferred date to see booked vs available slots with instant visual indicators.</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-3">
+                        <div class="stat-icon bg-success-subtle text-success flex-shrink-0">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Status Tracking: Pending, Confirmed, Completed</h6>
+                            <p class="small text-muted mb-0">Keep full transparency with live status badges across the patient and administrative portal.</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-3">
+                        <div class="stat-icon bg-warning-subtle text-warning flex-shrink-0">
+                            <i class="bi bi-file-earmark-medical"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1">Digital Medical Reports & Prescriptions</h6>
+                            <p class="small text-muted mb-0">After consultation, staff generate digital reports accessible instantly from the patient dashboard.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6 text-center">
+                <div class="card border-0 shadow-lg rounded-4 p-4 text-start" style="background: linear-gradient(135deg, #0f172a, #1e3a8a); color: white;">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <span class="badge bg-success px-3 py-2"><i class="bi bi-shield-lock-fill me-1"></i> Admin & Staff Workflow</span>
+                        <span class="badge bg-white text-dark">Live Console</span>
+                    </div>
+                    <h4 class="fw-bold text-white mb-2">Administrative Control Hub</h4>
+                    <p class="small text-light opacity-80 mb-4">
+                        Hospital reception and medical staff can confirm appointments, reschedule, assign consultation summaries, or manage doctor schedules.
+                    </p>
+                    <div class="bg-dark bg-opacity-50 p-3 rounded-3 mb-4 border border-secondary border-opacity-50 font-monospace small">
+                        <div>$ python manage.py migrate</div>
+                        <div class="text-success">&gt; Applied hospital_app migrations [OK]</div>
+                        <div class="text-info">&gt; WhiteNoise static compression [ENABLED]</div>
+                        <div class="text-warning">&gt; Double booking protection [ACTIVE]</div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'staff_dashboard' %}" class="btn btn-outline-light rounded-pill px-4 btn-sm fw-semibold">
+                            Open Staff Dashboard
+                        </a>
+                        <a href="{% url 'patient_dashboard' %}" class="btn btn-primary rounded-pill px-4 btn-sm fw-semibold">
+                            Patient Portal
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
